@@ -4,62 +4,57 @@
 #include "../inc/stack_array.h"
 #include "../inc/stack_list.h"
 
+void stack_array_push_dynamic_test(const size_t &size) {
+    stack_array<int> s_arr;
+    auto start = std::chrono::high_resolution_clock::now();
+    for(int i=0; i<size; i++) {
+        s_arr.push(i);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "stack_array with dynamic allocation, size = " << size << ": ";
+    std::cout << static_cast<double>(duration.count())/1000.f << "ms" << std::endl;
+}
+void stack_array_push_reserve_test(const size_t &size) {
+    stack_array<int> s_arr;
+    auto start = std::chrono::high_resolution_clock::now();
+    s_arr.reserve(size);
+    for(int i=0; i<size; i++) {
+        s_arr.push(i);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "stack_array with memory reservation, size = " << size << ": ";
+    std::cout << static_cast<double>(duration.count())/1000.f << "ms" << std::endl;
+}
+
+void stack_list_push_test(const size_t &size) {
+    stack_list<int> s_list;
+    auto start = std::chrono::high_resolution_clock::now();
+    for(int i=0; i<size; i++) {
+        s_list.push(i);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "stack_list:, size = " << size <<": " ;
+    std::cout << static_cast<double>(duration.count())/1000.f << "ms" << std::endl;
+}
+
+void push_test() {
+    stack_array_push_reserve_test(100);
+    stack_array_push_dynamic_test(100);
+    stack_list_push_test(100);
+    std::cout << std::endl;
+    stack_array_push_reserve_test(1000);
+    stack_array_push_dynamic_test(1000);
+    stack_list_push_test(1000);
+    std::cout << std::endl;
+    stack_array_push_reserve_test(10000);
+    stack_array_push_dynamic_test(10000);
+    stack_list_push_test(10000);
+    std::cout << std::endl;
+}
+
 int main() {
-
-    stack_list<int> s;
-
-    for(int i=0; i<1000; i++) {
-        s.push(i);
-    }
-    for(int i=0; i<1000; i++) {
-        std::cout << s.peek() << std::endl;
-        s.pop();
-    }
-
-
-
-
-    /*typedef struct complexDataType {
-        int data1;
-        float data2;
-        char data3;
-        size_t data4;
-        bool data5;
-    };
-    complexDataType a={1, 2.5, 'c', 125364609, false};
-
-    stack_array<complexDataType> s;
-    auto start = std::chrono::system_clock::now();
-    auto end = std::chrono::system_clock::now();
-    auto elapsed = end - start;
-
-
-    s.reserve(100000);
-
-
-
-    start = std::chrono::system_clock::now();
-    for(int i=0; i<100000; i++) {
-        s.emplace({1, 2.5, 'c', 125364609, false});
-    }
-    end = std::chrono::system_clock::now();
-    elapsed = end - start;
-    std::cout << "Emplace: " << elapsed.count() << '\n';
-
-    s.clear();
-
-
-    s.reserve(100000);
-
-
-    start = std::chrono::system_clock::now();
-    for(int i=0; i<100000; i++) {
-        s.push({1, 2.5, 'c', 125364609, false});
-    }
-    s.clear();
-
-    end = std::chrono::system_clock::now();
-    elapsed = end - start;
-    std::cout << "Push: " << elapsed.count() << '\n';*/
-    return 0;
+    push_test();
 }

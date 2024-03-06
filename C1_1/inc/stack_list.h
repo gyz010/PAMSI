@@ -19,25 +19,38 @@ template <typename T, typename Node=Node<T>>
 class stack_list {
 private:
     Node* node;
+    size_t size;
 public:
     stack_list() {
         node=nullptr;
+        size=0;
+    }
+    bool empty() {
+        return (!size);
     }
     void push(const T &data) {
-        if (node) {
-            node->next = new Node;
-            node->next->prev = node;
-            node->next->val = data;
-            node = node->next;
+        try {
+            if (node) {
+                node->next = new Node;
+                node->next->prev = node;
+                node->next->val = data;
+                node = node->next;
+            } else {
+                node = new Node;
+                node->val = data;
+                node->next = nullptr;
+                node->prev = nullptr;
+            }
+            ++size;
         }
-        else {
-            node = new Node;
-            node->val = data;
-            node->next = nullptr;
-            node->prev = nullptr;
+        catch (std::bad_alloc &e) {
+            std::cout << e.what() << std::endl;
         }
     }
     void pop() {
+        if(empty()) {
+            throw (std::runtime_error("Stack is empty"));
+        }
         if(node->prev) {
             node = node->prev;
             delete node->next;
@@ -47,12 +60,23 @@ public:
             delete node;
             node = nullptr;
         }
+        --size;
     }
     T peek() {
+        if(empty()) {
+            throw (std::runtime_error("Stack is empty"));
+        }
         return node->val;
     }
-    bool empty() {
-        return (!node);
+    void clear() {
+        while(size>0) {
+            node=node->prev;
+            delete node->next;
+        }
+        if (node) {
+            delete node;
+            node = nullptr;
+        }
     }
 
 
