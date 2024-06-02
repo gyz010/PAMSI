@@ -8,23 +8,34 @@
 #include <vector>
 #include <string>
 #include "Checkers.h"
+#include <random>
+#include <limits>
 
-class Bot : protected Checkers {
+class Bot {
 private:
     struct Node {
-        double self_eval;
-        std::vector<std::string> move;
+        double eval;
+        std::string move;
         std::vector<Node> children;
+        int turn=0;
     };
-    Node root;
     const int depth;
+    const int64_t seed;
+    const bool is_black;
+    std::mt19937_64 gen;
+    void removeChildren(Node &node);
 public:
-    explicit Bot(int depth, std::vector<std::vector<int>> &board) : Checkers(
-            board), depth(depth) {}
-    void fillTree(Node &node, int depth, std::vector<std::vector<int>> temp_board, bool black_to_move);
-    void giveMove();
-    double evaluate();
-};
+    explicit Bot(bool is_black, int depth, int64_t seed) : is_black(is_black),
+                                                  depth(depth),
+                                                  seed(seed),
+                                                  gen(std::mt19937_64(seed)) {};
+    Node root;
+    void fillTree(Node &node, int depth, std::vector<std::vector<int>> temp_board, int turn);
+    void collapseTree(std::string &notation);
+    std::string getBestMove();
+    double evaluate(Node &node, const std::vector<std::vector<int>> &board);
+    void minmax(Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> board);
 
+    };
 
 #endif //C3_3_BOT_H

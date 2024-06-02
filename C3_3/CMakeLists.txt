@@ -10,4 +10,6 @@ add_executable(C3_3 src/main.cpp
         inc/Bot.h
         src/BoardActions.cpp
         inc/BoardActions.h
+        src/Evaluation.cpp
+        inc/Evaluation.h
 )

@@ -12,42 +12,30 @@
 #include <algorithm>
 #include <sstream>
 #include "BoardActions.h"
+#include "Bot.h"
 
 enum GameResult {NONE, BLACK_WIN, WHITE_WIN, DRAW};
 
 class Checkers {
+    // direction of move = sign(position)
+    int turn;
+
     // 0: empty, 1: black, -1: white 2: black king, -2: white king
     // black starts first
-    // direction of move = sign(position)
-
-    int turn;
+    std::vector<std::vector<int>> board;
     int no_jumps_count;
     GameResult result;
     void draw_board();
-
-    bool is_king(const position &pos);
-    bool is_valid_square(const position &pos);
-    bool is_legal_move(const position &from, const position &to);
-    bool move(const position &from, const position &to);
-    bool jump(const position &from, const position &to);
-    bool action(const std::string &notation);
-    std::vector<position> available_moves();
-    std::vector<position> available_jumps();
     bool checkWinCondition();
-    void available_jumps_seq_recursion(const position &from, std::vector<position> &seq, std::vector<std::vector<position>> &result);
-protected:
-    std::vector<std::vector<int>> board;
-    std::vector<position> available_moves_from(const position &from, int piece);
-    std::vector<position> available_jumps_from(const position &from, int piece);
-    std::vector<std::vector<position>> available_jumps_sequence(const position &from, int piece);
 public:
-
     explicit Checkers(std::vector<std::vector<int>> &board);
+
     void play();
+    void play_with_bot(bool is_human_black, int depth, int64_t seed);
+    void bot_vs_bot();
 
     //Getters
     int getTurn() const;
-    static std::vector<position> convert_notation(const std::string &notation);
 
 };
 

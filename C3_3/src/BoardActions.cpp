@@ -2,9 +2,12 @@
 // Created by gyz on 21.05.24.
 //
 
+#include <algorithm>
 #include "../inc/BoardActions.h"
 
-std::map<std::string, position> notation_map;
+std::map<std::string, position> BoardActions::notation_to_position_map;
+std::map<position, std::string> BoardActions::position_to_notation_map;
+
 
 bool BoardActions::is_king(const position &pos, std::vector<std::vector<int>> &board) {
     return std::abs(board[pos.row][pos.col]) == 2;
@@ -51,16 +54,17 @@ std::vector<position> BoardActions::available_jumps(std::vector<std::vector<int>
             if (board[row][col] == 0) continue;
             if (turn % 2 == board[row][col] > 0) continue;
             position pos = {row, col};
-            std::vector<position> jumps_from = available_jumps_from(pos, board[row][col], board, turn);
+            std::vector<position> jumps_from = available_jumps_from(pos, board, turn);
             jumps.insert(jumps.end(), jumps_from.begin(), jumps_from.end());
         }
     }
     return jumps;
 }
 
-std::vector<position> BoardActions::available_jumps_from(const position &from, const int piece,
+std::vector<position> BoardActions::available_jumps_from(const position &from,
                                                          std::vector<std::vector<int>> &board, int turn) {
     std::vector<position> jumps;
+    int piece = board[from.row][from.col];
     if (is_king(from, board)) { // Król
         for (int row = -1; row <= 1; row += 2) {
             for (int col = -1; col <= 1; col += 2) {
@@ -88,37 +92,22 @@ std::vector<position> BoardActions::available_jumps_from(const position &from, c
     return jumps;
 }
 
-bool BoardActions::move(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn) {
-    if (!is_legal_move(from, to, board, turn)) {
-        std::cout << "Illegal move" << std::endl;
-        return false;
-    }
-    board[to.row][to.col] = board[from.row][from.col];
-    board[from.row][from.col] = 0;
-
-    //Promocja
-    if ((to.row == 0 || to.row == 7) && !is_king(to, board)) {
-        board[to.row][to.col] *= 2;
-    }
-    turn++;
-    return true;
-}
-
 std::vector<position> BoardActions::available_moves(std::vector<std::vector<int>> &board, int turn) {
     std::vector<position> moves;
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
             if (board[row][col] == 0) continue;
             if (turn % 2 == board[row][col] > 0) continue;
-            std::vector<position> moves_from = available_moves_from({row, col}, board[row][col], board, turn);
+            std::vector<position> moves_from = available_moves_from({row, col}, board, turn);
             moves.insert(moves.end(), moves_from.begin(), moves_from.end());
         }
     }
     return moves;
 }
 
-std::vector<position> BoardActions::available_moves_from(const position &from, int piece, std::vector<std::vector<int>> &board, int turn) {
+std::vector<position> BoardActions::available_moves_from(const position &from, std::vector<std::vector<int>> &board, int turn) {
     std::vector<position> moves;
+    int piece = board[from.row][from.col];
     if (is_king(from, board)) {
         for (int row = -1; row <= 1; row += 2) {
             for (int col = -1; col <= 1; col += 2) {
@@ -139,11 +128,27 @@ std::vector<position> BoardActions::available_moves_from(const position &from, i
     return moves;
 }
 
+bool BoardActions::move(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn) {
+    if (!is_legal_move(from, to, board, turn)) {
+        std::cout << "Illegal move" << std::endl;
+        return false;
+    }
+    board[to.row][to.col] = board[from.row][from.col];
+    board[from.row][from.col] = 0;
+
+    //Promocja
+    if ((to.row == 0 || to.row == 7) && !is_king(to, board)) {
+        board[to.row][to.col] *= 2;
+    }
+    turn++;
+    return true;
+}
+
 bool BoardActions::jump(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn) {
     //Sprawdzenie czy bije poprawny kolor
     if (turn % 2 == board[from.row][from.col] > 0) return false;
 
-    std::vector<position> possible_jumps = available_jumps_from(from, board[from.row][from.col], board, turn);
+    std::vector<position> possible_jumps = available_jumps_from(from, board, turn);
     for(const position &jump : possible_jumps) {
         if(jump == to) {
             board[to.row][to.col] = board[from.row][from.col];
@@ -152,12 +157,6 @@ bool BoardActions::jump(const position &from, const position &to, std::vector<st
             //Usunięcie zbitego pionka
             position middle = {(from.row + to.row) / 2, (from.col + to.col) / 2};
             board[middle.row][middle.col] = 0;
-
-            //Promocja
-            if ((to.row == 0 || to.row == 7) && !is_king(to, board)) {
-                board[to.row][to.col] *= 2;
-                turn++;
-            }
             return true;
         }
     }
@@ -179,7 +178,9 @@ bool BoardActions::action(const std::string &notation, std::vector<std::vector<i
                 return false;
             }
             // W biciu doszło do promocji więc zakończ ruch
-            if (turn % 2 == board[moves[i+1].row][moves[i+1].col] > 0) {
+            if ((moves[i+1].row == 0 || moves[i+1].row == 7) && !is_king(moves[i+1], board)) {
+                board[moves[i+1].row][moves[i+1].col] *= 2;
+                turn++;
                 if (i+2 == moves.size()) return true;
                     // Nielegalna próba bicia po promocji
                 else {
@@ -189,7 +190,9 @@ bool BoardActions::action(const std::string &notation, std::vector<std::vector<i
                 }
             }
             // Sprawdzenie czy nie zostało więcej możliwych bić
-            if (i==moves.size()-2 && !available_jumps(board, turn).empty()) {
+            if (i==moves.size()-2 && !available_jumps_from(moves[i],
+                                                           board,
+                                                           turn).empty()) {
                 board = board_backup;
                 return false;
             }
@@ -204,16 +207,16 @@ bool BoardActions::action(const std::string &notation, std::vector<std::vector<i
         if (moves.size() != 2) return false;
         if (!move(moves[0], moves[1], board, turn)) return false;
     }
+    else return false;
     return true;
 }
-
 std::vector<position> BoardActions::convert_notation(const std::string &notation) {
-    if(notation_map.empty()) {
+    if(notation_to_position_map.empty()) {
         int count = 1;
         for (int row = 0; row < 8; ++row) {
             for (int col = 0; col < 8; ++col) {
                 if ((row + col) % 2 == 1) {
-                    notation_map[std::to_string(count)] = {row, col};
+                    notation_to_position_map[std::to_string(count)] = {row, col};
                     ++count;
                 }
             }
@@ -224,21 +227,125 @@ std::vector<position> BoardActions::convert_notation(const std::string &notation
     std::string token;
     if (notation.find('-') == std::string::npos) {
         while (std::getline(ss, token, 'x')) {
-            if(token[0] >= 'A' && token[0] <= 'H') {
-                moves.push_back({token[1] - '1', token[0] - 'A'});
-            } else {
-                moves.push_back(notation_map[token]);
-            }
+            moves.push_back(notation_to_position_map[token]);
         }
     }
     if (notation.find('x') == std::string::npos) {
         while (std::getline(ss, token, '-')) {
-            if(token[0] >= 'A' && token[0] <= 'H') {
-                moves.push_back({token[1] - '1', token[0] - 'A'});
-            } else {
-                moves.push_back(notation_map[token]);
-            }
+            moves.push_back(notation_to_position_map[token]);
         }
     }
     return moves;
+}
+
+void BoardActions::available_jump_sequences(const position &from, std::vector<position> current_sequence,
+                                                std::vector<std::vector<int>> temp_board, int turn,
+                                                std::vector<std::vector<position>> &sequences) {
+
+    std::vector<position> jumps = available_jumps_from(from, temp_board, turn);
+    if (jumps.empty()) {
+        sequences.push_back(current_sequence);
+        return;
+    }
+    for (const position &j : jumps) {
+        std::vector<std::vector<int>> new_board = temp_board;
+        jump(from, j, new_board, turn);
+        std::vector<position> new_sequence = current_sequence;
+        new_sequence.push_back(j);
+        available_jump_sequences(j, new_sequence, new_board, turn, sequences);
+    }
+}
+
+std::string BoardActions::position_to_notation(std::vector<position> &pos) {
+    if(position_to_notation_map.empty()) {
+        int count = 1;
+        for (int row = 0; row < 8; ++row) {
+            for (int col = 0; col < 8; ++col) {
+                if ((row + col) % 2 == 1) {
+                    position_to_notation_map[{row, col}] = std::to_string(count);
+                    ++count;
+                }
+            }
+        }
+    }
+    std::string notation;
+    if(pos.size() < 2) return "";
+    if(std::abs(pos[0].row - pos[1].row) == 1 && std::abs(pos[0].col - pos[1].col) == 1) { //Ruch
+        for(const position &p : pos) {
+            notation += position_to_notation_map[{p.row, p.col}];
+            notation += '-';
+        }
+        notation.pop_back();
+    } else { //Bicie
+        for(const position &p : pos) {
+            notation += position_to_notation_map[{p.row, p.col}];
+            notation += 'x';
+        }
+        notation.pop_back();
+    }
+    return notation;
+}
+
+void BoardActions::no_legal_check_move(const position &from, const position &to, std::vector<std::vector<int>> &board,
+                                       int turn) {
+    board[to.row][to.col] = board[from.row][from.col];
+    board[from.row][from.col] = 0;
+
+    //Promocja
+    if ((to.row == 0 || to.row == 7) && !is_king(to, board)) {
+        board[to.row][to.col] *= 2;
+    }
+    turn++;
+}
+
+void BoardActions::no_legal_check_jump(const position &from, const position &to, std::vector<std::vector<int>> &board,
+                                       int turn) {
+    board[to.row][to.col] = board[from.row][from.col];
+    board[from.row][from.col] = 0;
+
+    //Usunięcie zbitego pionka
+    position middle = {(from.row + to.row) / 2, (from.col + to.col) / 2};
+    board[middle.row][middle.col] = 0;
+}
+
+void BoardActions::no_legal_check_action(const std::string &notation, std::vector<std::vector<int>> &board, int turn) {
+    std::vector<position> moves;
+    //Bicie
+    if(notation.find('-') == std::string::npos) {
+        moves = convert_notation(notation);
+        for(int i=0; i<moves.size()-1; i++) {
+            no_legal_check_jump(moves[i], moves[i+1], board, turn);
+            // W biciu doszło do promocji więc zakończ ruch
+            if ((moves[i+1].row == 0 || moves[i+1].row == 7) && !is_king(moves[i+1], board)) {
+                board[moves[i+1].row][moves[i+1].col] *= 2;
+                turn++;
+                return;
+            }
+        }
+    }
+    if(notation.find('x') == std::string::npos) {
+        moves = convert_notation(notation);
+        no_legal_check_move(moves[0], moves[1], board, turn);
+    }
+}
+
+void BoardActions::undo_action(const std::string &notation, std::vector<std::vector<int>> &board, std::vector<int> &taken_pieces) {
+    std::vector<position> moves;
+    //Bicie
+    if(notation.find('-') == std::string::npos) {
+        moves = convert_notation(notation);
+        std::reverse(moves.begin(), moves.end());
+        for(int i=0; i<moves.size()-1; i++) {
+            board[moves[i].row][moves[i].col] = board[moves[i+1].row][moves[i+1].col];
+            board[moves[i+1].row][moves[i+1].col] = 0;
+            // 
+            position middle = {(moves[i].row + moves[i+1].row) / 2, (moves[i].col + moves[i+1].col) / 2};
+            board[middle.row][middle.col] = taken_pieces.back();
+            taken_pieces.pop_back();
+            //Promocja
+            if ((moves[i+1].row == 0 || moves[i+1].row == 7) && !is_king(moves[i+1], board)) {
+                board[moves[i+1].row][moves[i+1].col] /= 2;
+            }
+        }
+    }
 }

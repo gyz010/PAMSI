@@ -16,24 +16,66 @@ struct position {
     bool operator==(const position &other) const {
         return row == other.row && col == other.col;
     }
+    bool operator<(const position &other) const {
+        return row < other.row || (row == other.row && col < other.col);
+    }
 };
 
 class BoardActions {
-    static std::map<std::string, position> notation_map;
+    static std::map<std::string, position> notation_to_position_map;
+    static std::map<position, std::string> position_to_notation_map;
 public:
     static bool is_king(const position &pos, std::vector<std::vector<int>> &board);
+
     static bool is_valid_square(const position &pos);
+
     static bool is_legal_move(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn);
+
     static bool move(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn);
+
     static bool jump(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn);
+
     static bool action(const std::string &notation, std::vector<std::vector<int>> &board, int turn);
+
     static std::vector<position> available_moves(std::vector<std::vector<int>> &board, int turn);
+
     static std::vector<position> available_jumps(std::vector<std::vector<int>> &board, int turn);
+
     static std::vector<position> convert_notation(const std::string &notation);
-    static std::vector<position> available_moves_from(const position &from, int piece, std::vector<std::vector<int>> &board, int turn);
-    static std::vector<position> available_jumps_from(const position &from, int piece, std::vector<std::vector<int>> &board, int turn);
-    static std::vector<std::vector<position>> available_jumps_sequence(const position &from, int piece,
-                                                                       std::vector<std::vector<int>> &board, int turn);
+
+    static std::vector<position> available_moves_from(const position &from,
+                                                      std::vector<std::vector<int>> &board,
+                                                      int turn);
+
+    static std::vector<position> available_jumps_from(const position &from,
+                                                      std::vector<std::vector<int>> &board,
+                                                      int turn);
+
+    static void available_jump_sequences(const position &from,
+                                         std::vector<position> current_sequence,
+                                         std::vector<std::vector<int>> temp_board,
+                                         int turn,
+                                         std::vector<std::vector<position>> &sequences);
+
+    static std::string position_to_notation(std::vector<position> &pos);
+
+    static void no_legal_check_jump(const position &from,
+                                    const position &to,
+                                    std::vector<std::vector<int>> &board,
+                                    int turn);
+
+    static void no_legal_check_move(const position &from,
+                                    const position &to,
+                                    std::vector<std::vector<int>> &board,
+                                    int turn);
+
+    static void no_legal_check_action(const std::string &notation,
+                                      std::vector<std::vector<int>> &board,
+                                      int turn);
+
+    static void undo_action(const std::string &notation,
+                           std::vector<std::vector<int>> &board,
+                           std::vector<int> &taken_pieces);
 };
 
 
