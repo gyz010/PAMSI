@@ -10,6 +10,8 @@
 #include "Checkers.h"
 #include <random>
 #include <limits>
+#include <chrono>
+#include <thread>
 
 class Bot {
 private:
@@ -30,11 +32,11 @@ public:
                                                   seed(seed),
                                                   gen(std::mt19937_64(seed)) {};
     Node root;
-    void fillTree(Node &node, int depth, std::vector<std::vector<int>> temp_board, int turn);
+    void fillTree(Node &node, int depth, std::vector<std::vector<int>> &board, int turn);
     void collapseTree(std::string &notation);
     std::string getBestMove();
-    double evaluate(Node &node, const std::vector<std::vector<int>> &board);
-    void minmax(Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> board);
+    double evaluate(const std::vector<std::vector<int>> &board);
+    void minmax(Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> &board);
 
     };
 

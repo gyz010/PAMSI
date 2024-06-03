@@ -10,6 +10,8 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <algorithm>
+
 
 struct position {
     int row, col;
@@ -41,11 +43,15 @@ public:
 
     static std::vector<position> available_jumps(std::vector<std::vector<int>> &board, int turn);
 
+    static std::vector<position> available_jumps(std::vector<std::vector<int>> &board, int turn, std::vector<position> &froms);
+
+
     static std::vector<position> convert_notation(const std::string &notation);
 
     static std::vector<position> available_moves_from(const position &from,
                                                       std::vector<std::vector<int>> &board,
                                                       int turn);
+
 
     static std::vector<position> available_jumps_from(const position &from,
                                                       std::vector<std::vector<int>> &board,
@@ -59,23 +65,37 @@ public:
 
     static std::string position_to_notation(std::vector<position> &pos);
 
+
     static void no_legal_check_jump(const position &from,
                                     const position &to,
                                     std::vector<std::vector<int>> &board,
-                                    int turn);
+                                    std::vector<int> &taken_pieces,
+                                    bool &promoted);
 
     static void no_legal_check_move(const position &from,
                                     const position &to,
                                     std::vector<std::vector<int>> &board,
-                                    int turn);
+                                    bool &promoted);
 
     static void no_legal_check_action(const std::string &notation,
                                       std::vector<std::vector<int>> &board,
-                                      int turn);
+                                      std::vector<int> &taken_pieces,
+                                      bool &promoted);
+
+    static void undo_move(const position &from,
+                          const position &to,
+                          std::vector<std::vector<int>> &board,
+                          bool promoted);
+
+    static void undo_jump(const std::vector<position> &jumps,
+                            std::vector<std::vector<int>> &board,
+                            std::vector<int> &taken_pieces,
+                            bool promoted);
 
     static void undo_action(const std::string &notation,
                            std::vector<std::vector<int>> &board,
-                           std::vector<int> &taken_pieces);
+                           std::vector<int> &taken_pieces,
+                           bool promoted);
 };
 
 

@@ -4,19 +4,28 @@
 
 #include "../inc/Bot.h"
 
-void Bot::fillTree(Bot::Node &node, int depth, std::vector<std::vector<int>> board, int turn) {
+
+void Bot::fillTree(Bot::Node &node, int depth, std::vector<std::vector<int>> &board, int turn) {
+    using namespace std::chrono;
     if (depth == this->depth) return;
 
+
     //Odbudowywanie drzewa
-    if (!node.children.empty() && depth != this->depth - 1) {
+
+    if (!node.children.empty()) {
         for (auto &child : node.children) {
+            bool promoted = false;
+            std::vector<int> taken_pieces;
+            BoardActions::no_legal_check_action(child.move, board, taken_pieces, promoted);
             fillTree(child, depth + 1, board, turn+1);
+            BoardActions::undo_action(child.move, board, taken_pieces, promoted);
         }
         return;
     }
 
     //Sprawdź czy jest bicie
-    std::vector<position> moves = BoardActions::available_jumps(board, turn);
+    std::vector<position> jumps_from;
+    std::vector<position> moves = BoardActions::available_jumps(board, turn, jumps_from);
     // Ruch
     if (moves.empty()) {
         for (int row = 0; row < 8; row++) {
@@ -25,53 +34,58 @@ void Bot::fillTree(Bot::Node &node, int depth, std::vector<std::vector<int>> boa
                 if (turn % 2 == board[row][col] > 0) continue;
                 moves = BoardActions::available_moves_from({row, col}, board, turn);
                 for (auto &move: moves) {
+                    //Tworzenie dzieci, nadawanie im ich ruchów.
                     Node child;
-                    std::vector<std::vector<int>> temp_board = board;
                     std::vector<position> temp_move = {{row, col}, move};
                     child.move = BoardActions::position_to_notation(temp_move);
                     child.turn = turn+1;
                     node.children.push_back(child);
-                    BoardActions::no_legal_check_move({row, col}, move, temp_board, turn);
-                    fillTree(node.children.back(), depth + 1, temp_board, turn+1);
+
+                    //Wykonanie ruchu i przejscie do kolejnego poziomu drzewa
+                    bool promoted = false;
+                    BoardActions::no_legal_check_move({row, col}, move, board, promoted);
+                    fillTree(node.children.back(), depth + 1, board, turn+1);
+
+                    //Cofanie ruchu po wyjściu z rekurencji
+                    BoardActions::undo_move({row, col}, move, board, promoted);
                 }
             }
         }
+
         //Bicie
     } else {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                if (board[row][col] == 0) continue;
-                if (turn % 2 == board[row][col] > 0) continue;
-                std::vector<std::vector<position>> sequences;
-                BoardActions::available_jump_sequences({row, col},
-                                                       {},
-                                                       board,
-                                                       turn,
-                                                       sequences);
-
-                for (auto &seq: sequences) {
-                    if(seq.empty()) continue;
-                    Node child;
-                    std::vector<std::vector<int>> temp_board = board;
-                    std::vector<position> temp_move = {{row, col}};
-                    for (auto &move: seq) {
-                        temp_move.push_back(move);
-                    }
-                    child.move = BoardActions::position_to_notation(temp_move);
-                    child.turn = turn+1;
-                    node.children.push_back(child);
-                    for (int i = 0; i < temp_move.size() - 1; i++) {
-                        BoardActions::no_legal_check_jump(temp_move[i],
-                                                          temp_move[i + 1],
-                                                          temp_board,
-                                                          turn);
-                    }
-                    //Promocja
-                    if ((temp_move.back().row==0 || temp_move.back().row==7) && !BoardActions::is_king(temp_move.back(), board)) {
-                        board[temp_move.back().row][temp_move.back().col] *= 2;
-                    }
-                    fillTree(node.children.back(), depth + 1, temp_board, turn+1);
+        for(auto &from : jumps_from) {
+            std::vector<std::vector<position>> sequences;
+            BoardActions::available_jump_sequences(from,
+                                                   {},
+                                                   board,
+                                                   turn,
+                                                   sequences);
+            for (auto &seq: sequences) {
+                if(seq.empty()) continue;
+                //Tworzenie dzieci, nadawanie im ich ruchów.
+                Node child;
+                std::vector<position> temp_move = {from};
+                for (auto &jump: seq) {
+                    temp_move.push_back(jump);
                 }
+                child.move = BoardActions::position_to_notation(temp_move);
+                child.turn = turn+1;
+                node.children.push_back(child);
+                //Wykonanie bić i przejscie do kolejnego poziomu drzewa
+                bool promoted = false;
+                std::vector<int> taken_pieces;
+                for (int i = 0; i < temp_move.size() - 1; i++) {
+                    BoardActions::no_legal_check_jump(temp_move[i],
+                                                      temp_move[i + 1],
+                                                      board,
+                                                      taken_pieces,
+                                                      promoted);
+                }
+                fillTree(node.children.back(), depth + 1, board, turn+1);
+
+                //Cofanie bić po wyjściu z rekurencji
+                BoardActions::undo_jump(temp_move, board, taken_pieces, promoted);
             }
         }
     }
@@ -93,19 +107,27 @@ void Bot::collapseTree(std::string &notation) {
             it = root.children.erase(it);
         }
     }
+    if (!root.children.empty()) {
+        Node newRoot = root.children[0];
+        root.children.erase(root.children.begin());
+        root = newRoot;
+    }
 }
 
-void Bot::minmax(Bot::Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> board) {
+void Bot::minmax(Bot::Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> &board) {
     if (depth == this->depth) {
-        node.eval = evaluate(node, board);
+        node.eval = evaluate(board);
         return;
     }
     if (is_max) {
         double max_eval = std::numeric_limits<double>::min();
         for (auto &child: node.children) {
-            auto temp_board = board;
-            BoardActions::no_legal_check_action(child.move, temp_board, child.turn);
-            minmax(child, depth + 1, false, alpha, beta, temp_board);
+            bool promoted = false;
+            std::vector<int> taken_pieces;
+            BoardActions::no_legal_check_action(child.move, board, taken_pieces, promoted);
+            minmax(child, depth + 1, false, alpha, beta, board);
+            BoardActions::undo_action(child.move, board, taken_pieces, promoted);
+
             max_eval = std::max(max_eval, child.eval);
             alpha = std::max(alpha, max_eval);
             node.eval = max_eval;
@@ -115,9 +137,11 @@ void Bot::minmax(Bot::Node &node, int depth, bool is_max, double alpha, double b
     } else {
         double min_eval = std::numeric_limits<double>::max();
         for (auto &child: node.children) {
-            auto temp_board = board;
-            BoardActions::no_legal_check_action(child.move, temp_board, child.turn);
-            minmax(child, depth + 1, true, alpha, beta, temp_board);
+            bool promoted = false;
+            std::vector<int> taken_pieces;
+            BoardActions::no_legal_check_action(child.move, board, taken_pieces, promoted);
+            minmax(child, depth + 1, true, alpha, beta, board);
+            BoardActions::undo_action(child.move, board, taken_pieces, promoted);
             min_eval = std::min(min_eval, child.eval);
             beta = std::min(beta, min_eval);
             node.eval = min_eval;
@@ -127,7 +151,7 @@ void Bot::minmax(Bot::Node &node, int depth, bool is_max, double alpha, double b
     }
 }
 
-double Bot::evaluate(Bot::Node &node, const std::vector<std::vector<int>> &board) {
+double Bot::evaluate(const std::vector<std::vector<int>> &board) {
     double eval=0;
     int side = is_black ? 1 : -1;
     for (int row = 0; row < 8; row++) {

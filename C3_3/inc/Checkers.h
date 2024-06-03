@@ -17,7 +17,7 @@
 enum GameResult {NONE, BLACK_WIN, WHITE_WIN, DRAW};
 
 class Checkers {
-    // direction of move = sign(position)
+    // direction of move = sign(board[position])
     int turn;
 
     // 0: empty, 1: black, -1: white 2: black king, -2: white king
@@ -26,7 +26,7 @@ class Checkers {
     int no_jumps_count;
     GameResult result;
     void draw_board();
-    bool checkWinCondition();
+    bool check_win_condition();
 public:
     explicit Checkers(std::vector<std::vector<int>> &board);
 
