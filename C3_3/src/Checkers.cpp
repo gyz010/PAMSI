@@ -114,49 +114,34 @@ void Checkers::play_with_bot(bool is_human_black, int depth, int64_t seed) {
     }
 }
 
-void Checkers::bot_vs_bot() {
+/*void Checkers::bot_vs_bot() {
     using namespace std::chrono;
     std::string notation;
     std::random_device rand;
-    Bot bot_black(true, 8, 2422);
-    Bot bot_white(false, 8, 457);
+    Bot bot_black(true, 8, 232, TWENTY_FIVE_PARAMS);
+    Bot bot_white(false, 8, 577, TWENTY_FIVE_PARAMS);
     long max_time=-1;
     while (true) {
-//        draw_board();
+        draw_board();
         auto start_black = high_resolution_clock::now();
-        bot_black.collapseTree(notation);
-        bot_black.fillTree(bot_black.root, 0, board, turn);
-        bot_black.minmax(bot_black.root,
-                         0, true,
-                         std::numeric_limits<double>::min(),
-                         std::numeric_limits<double>::max(),
-                         board);
-        notation = bot_black.getBestMove();
+        notation = bot_black.move(board, turn, notation);
         std::cout << notation << std::endl;
+        std::cout << "Eval: " << bot_black.root.eval << std::endl;
         int temp = turn;
-        bot_black.collapseTree(notation);
         auto stop_black = high_resolution_clock::now();
         auto duration_black = duration_cast<milliseconds>(stop_black - start_black);
         std::cout << "Black move took " << duration_black.count() << "ms" << std::endl;
+
         if (!BoardActions::action(notation, board, turn)) {
             result = (temp%2==0) ? WHITE_WIN : BLACK_WIN;
             break;
         }
         if(check_win_condition()) break;
         turn++;
-//        draw_board();
+        draw_board();
         auto start_white = high_resolution_clock::now();
-        bot_white.collapseTree(notation);
-        bot_white.fillTree(bot_white.root, 0, board, turn);
-        bot_white.minmax(bot_white.root,
-                         0, true,
-                         std::numeric_limits<double>::min(),
-                         std::numeric_limits<double>::max(),
-                         board);
-        notation = bot_white.getBestMove();
-        std::cout << notation << std::endl;
+        notation = bot_white.move(board, turn, notation);
         temp = turn;
-        bot_white.collapseTree(notation);
         auto stop_white = high_resolution_clock::now();
         auto duration_white = duration_cast<milliseconds>(stop_white - start_white);
         std::cout << "White move took " << duration_white.count() << "ms" << std::endl;
@@ -183,7 +168,7 @@ void Checkers::bot_vs_bot() {
             std::cout << "???" << std::endl;
             break;
     }
-}
+}*/
 
 
 bool Checkers::check_win_condition() {
@@ -207,6 +192,51 @@ bool Checkers::check_win_condition() {
 
     if(result!=NONE) return true;
     return false;
+}
+
+void Checkers::train() {
+    std::random_device rand;
+    //starting parameters
+    std::vector<double> parameters {
+            1.0, //number_of_pawns
+            1.8, //number_of_kings
+            -0.05, //total_distance_to_promotion
+            0.3, //save_pawn
+            0.6, //save_king
+            0.4, //defending_piece
+            0.6, //attacking_pawn
+            0.5, //central_pawn
+            1.1, //central_king
+            0.1, //movable_pawn
+            0.2, //movable_king
+            0.1, //empty_promotion_fields
+            0.2, //main_diagonal_pawn
+            0.5, //main_diagonal_king
+            0.15, //double_diagonal_pawn
+            0.30, //double_diagonal_king
+            -0.2, //loner_pawn
+            -0.1, //loner_king
+            0.2, //holes
+            0.3, //is_triangle_pattern
+            0.3, //is_oreo_pattern
+            0.4, //is_bridge_pattern
+            -0.1, //is_dog_pattern
+            -0.1, //is_corner_pawn
+            -0.1, //is_corner_king
+    };
+    std::vector<double> prev_parameters;
+    board = { { 0, 1,  0, 1,  0, 1,  0, 1},
+              { 1, 0,  1, 0,  1, 0,  1, 0},
+              { 0, 1,  0, 1,  0, 1,  0, 1},
+              { 0, 0,  0, 0,  0, 0,  0, 0},
+              { 0, 0,  0, 0,  0, 0,  0, 0},
+              {-1, 0, -1, 0, -1, 0, -1, 0},
+              { 0,-1,  0,-1,  0,-1,  0,-1},
+              {-1, 0, -1, 0, -1, 0, -1, 0} };
+    Bot bot1(true, 8, 0, TWENTY_FIVE_PARAMS);
+    Bot bot2(false, 8, rand(), SIMPLE);
+
+
 }
 
 // Getters

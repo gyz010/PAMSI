@@ -2,6 +2,7 @@
 // Created by gyz on 21.05.24.
 //
 
+#include <chrono>
 #include "../inc/BoardActions.h"
 
 std::map<std::string, position> BoardActions::notation_to_position_map;
@@ -61,6 +62,7 @@ std::vector<position> BoardActions::available_jumps(std::vector<std::vector<int>
 }
 
 std::vector<position> BoardActions::available_jumps(std::vector<std::vector<int>> &board, int turn, std::vector<position> &froms) {
+
     std::vector<position> jumps;
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
@@ -91,7 +93,8 @@ std::vector<position> BoardActions::available_jumps_from(const position &from,
                 }
             }
         }
-    } else { // Pion
+    }
+    else { // Pion
         int row = piece;
         for (int col = -1; col <= 1; col += 2) {
             if (!is_valid_square({from.row + row, from.col + col})) continue;

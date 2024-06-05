@@ -33,6 +33,7 @@ public:
     void play();
     void play_with_bot(bool is_human_black, int depth, int64_t seed);
     void bot_vs_bot();
+    void train();
 
     //Getters
     int getTurn() const;

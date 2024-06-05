@@ -25,8 +25,11 @@ struct position {
 
 class BoardActions {
     static std::map<std::string, position> notation_to_position_map;
+
     static std::map<position, std::string> position_to_notation_map;
 public:
+    inline static long time = 0;
+
     static bool is_king(const position &pos, std::vector<std::vector<int>> &board);
 
     static bool is_valid_square(const position &pos);

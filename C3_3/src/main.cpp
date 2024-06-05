@@ -17,8 +17,18 @@ int main() {
                                             { 0,-1,  0,-1,  0,-1,  0,-1},
                                             {-1, 0, -1, 0, -1, 0, -1, 0} };
 
-    Checkers checkers(board);
+/*  std::vector<std::vector<int>> board = { {0, 0, 0, 0, 0, 0, 0, 0},
+                                            {0, 0, 1, 0, 1, 0, 1, 0},
+                                            {0, 0, 0, 0, 0, 0, 0, 0},
+                                            {0, 0, 1, 0, 1, 0, 1, 0},
+                                            {0, 0, 0, 0, 0, 0, 0, 0},
+                                            {0, 0, 1, 0, 1, 0, 1, 0},
+                                            {0, 0, 0, 0, 0, 0, 0, -1},
+                                            {0, 0, 0, 0, 0, 0, 0, 0}};*/
 
+//    std::vector<std::vector<position>> positions;
+//    BoardActions::available_jump_sequences({6, 7}, {}, board, 1, positions);
+    Checkers checkers(board);
     checkers.bot_vs_bot();
     return 0;
 }
