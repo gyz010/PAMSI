@@ -102,7 +102,9 @@ int main(int argc, char *argv[])
     int index_ruchu = nr_ruchu*2+player-1;
 
     if ((nr_ruchu>0) || (player==BLACK)) {
+        //Tutaj wykonuje wszystko zwiazane z ruchem
       printf("Wysylam do serwera moj ruch: %s\n", ruchy[index_ruchu]);
+      //Wysylam ruch
       if (write(serv_sock, ruchy[index_ruchu], strlen(ruchy[index_ruchu])) < 0){
 	perror("write");
 	exit(errno);

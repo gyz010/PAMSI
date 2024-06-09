@@ -21,14 +21,15 @@ struct position {
     bool operator<(const position &other) const {
         return row < other.row || (row == other.row && col < other.col);
     }
+    position operator-(const position &other) const {
+        return {row - other.row, col - other.col};
+    }
 };
 
 class BoardActions {
-    static std::map<std::string, position> notation_to_position_map;
+    static std::unordered_map<std::string, position> notation_to_position_map;
 
-    static std::map<position, std::string> position_to_notation_map;
 public:
-    inline static long time = 0;
 
     static bool is_king(const position &pos, std::vector<std::vector<int>> &board);
 
@@ -40,7 +41,7 @@ public:
 
     static bool jump(const position &from, const position &to, std::vector<std::vector<int>> &board, int turn);
 
-    static bool action(const std::string &notation, std::vector<std::vector<int>> &board, int turn);
+    static bool action(const std::string &notation, std::vector<std::vector<int>> &board, int turn, int &no_jumps_count);
 
     static std::vector<position> available_moves(std::vector<std::vector<int>> &board, int turn);
 

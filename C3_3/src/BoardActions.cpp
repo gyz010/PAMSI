@@ -5,9 +5,7 @@
 #include <chrono>
 #include "../inc/BoardActions.h"
 
-std::map<std::string, position> BoardActions::notation_to_position_map;
-std::map<position, std::string> BoardActions::position_to_notation_map;
-
+std::unordered_map <std::string, position> BoardActions::notation_to_position_map;
 
 bool BoardActions::is_king(const position &pos, std::vector<std::vector<int>> &board) {
     return std::abs(board[pos.row][pos.col]) == 2;
@@ -23,17 +21,18 @@ bool BoardActions::is_legal_move(const position &from, const position &to, std::
     //Ruch musi być w obrębie planszy
     if((!is_valid_square(from)) || (!is_valid_square(to))) return false;
 
-    //Zły kolor pionka
-    if(turn%2 == board[from.row][from.col] > 0) return false;
-
-    //Nie może być dostępnych bić
-    if(!available_jumps(board, turn).empty()) return false;
+    //Pole 'to' musi być puste
+    if (board[to.row][to.col] != 0) return false;
 
     //Pole 'from' musi być zajęte
     if (board[from.row][from.col] == 0) return false;
 
-    //Pole 'to' musi być puste
-    if (board[to.row][to.col] != 0) return false;
+    //Zły kolor pionka
+    if(turn%2 == board[from.row][from.col] > 0) return false;
+
+    //Nie może być dostępnych bić
+//    if(!available_jumps(board, turn).empty()) return false;
+
 
     //Figura może poruszać się tylko jedno pole na skos
     if (std::abs(to.row - from.row) != 1 || std::abs(to.col - from.col) != 1) return false;
@@ -71,7 +70,7 @@ std::vector<position> BoardActions::available_jumps(std::vector<std::vector<int>
             position pos = {row, col};
             std::vector<position> jumps_from = available_jumps_from(pos, board, turn);
             jumps.insert(jumps.end(), jumps_from.begin(), jumps_from.end());
-            froms.push_back(pos);
+            if(!jumps_from.empty()) froms.push_back(pos);
         }
     }
     return jumps;
@@ -179,12 +178,13 @@ bool BoardActions::jump(const position &from, const position &to, std::vector<st
     }
     return false;
 }
-bool BoardActions::action(const std::string &notation, std::vector<std::vector<int>> &board, int turn) {
+bool BoardActions::action(const std::string &notation, std::vector<std::vector<int>> &board, int turn, int &no_jumps_count) {
     //Notacja ruchu w postaci "from-to", from, to = (1, 32)
     //Notacja bicia w postaci "fromxto1xto2"
     std::vector<position> moves;
     //Bicie
     if(notation.find('-') == std::string::npos) {
+        no_jumps_count=0;
         moves = convert_notation(notation);
         if (moves.size() < 2) return false;
         std::vector<std::vector<int>> board_backup = board;
@@ -219,7 +219,9 @@ bool BoardActions::action(const std::string &notation, std::vector<std::vector<i
     }
         //Ruch
     else if(notation.find('x') == std::string::npos) {
+        no_jumps_count++;
         moves = convert_notation(notation);
+        if (std::abs(board[moves[0].row][moves[0].col]) == 1) no_jumps_count = 0;
         if (moves.size() != 2) return false;
         if (!move(moves[0], moves[1], board, turn)) return false;
     }
@@ -244,7 +246,7 @@ std::vector<position> BoardActions::convert_notation(const std::string &notation
     std::string token;
     if (notation.find('-') == std::string::npos) {
         while (std::getline(ss, token, 'x')) {
-            moves.push_back(notation_to_position_map[token]);
+            moves.push_back({notation_to_position_map[token]});
         }
     }
     if (notation.find('x') == std::string::npos) {
@@ -274,28 +276,17 @@ void BoardActions::available_jump_sequences(const position &from, std::vector<po
 }
 
 std::string BoardActions::position_to_notation(std::vector<position> &pos) {
-    if(position_to_notation_map.empty()) {
-        int count = 1;
-        for (int row = 0; row < 8; ++row) {
-            for (int col = 0; col < 8; ++col) {
-                if ((row + col) % 2 == 1) {
-                    position_to_notation_map[{row, col}] = std::to_string(count);
-                    ++count;
-                }
-            }
-        }
-    }
     std::string notation;
     if(pos.size() < 2) return "";
     if(std::abs(pos[0].row - pos[1].row) == 1 && std::abs(pos[0].col - pos[1].col) == 1) { //Ruch
         for(const position &p : pos) {
-            notation += position_to_notation_map[{p.row, p.col}];
+            notation += std::to_string(p.row * 4 + p.col / 2 + 1);
             notation += '-';
         }
         notation.pop_back();
     } else { //Bicie
         for(const position &p : pos) {
-            notation += position_to_notation_map[{p.row, p.col}];
+            notation += std::to_string(p.row * 4 + p.col / 2 + 1);
             notation += 'x';
         }
         notation.pop_back();

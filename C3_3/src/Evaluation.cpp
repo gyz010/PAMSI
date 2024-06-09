@@ -3,6 +3,7 @@
 //
 
 #include "../inc/Evaluation.h"
+#include "../inc/Checkers.h"
 
 double Evaluation::evaluate_random() {
     std::random_device rand;
@@ -10,69 +11,6 @@ double Evaluation::evaluate_random() {
 
 }
 
-double Evaluation::evaluate_11params(const std::vector<std::vector<int>> &board, bool is_black) {
-    double eval = 0;
-
-    int number_of_enemy_pieces = 0;
-
-    int number_of_pawns = 0;
-    int number_of_kings = 0;
-    int total_distance_to_promotion = 0;
-    int save_pawn = 0;
-    int save_king = 0;
-    int defending_piece = 0;
-    int attacking_pawn = 0;
-    int central_pawn = 0;
-    int central_king = 0;
-    int movable_pawn = 0;
-    int movable_king = 0;
-
-    for (int row = 0; row < 8; row++) {
-        for (int col = 0; col < 8; col++) {
-            if (board[row][col] == 0) continue;
-            if (is_friendly_pawn(board[row][col], is_black)) {
-                number_of_pawns++;
-                total_distance_to_promotion += distance_to_promotion(row, is_black);
-                if (is_save(col)) save_pawn++;
-                if (is_defending(row, is_black)) defending_piece++;
-                if (is_attacking_pawn(row, is_black)) attacking_pawn++;
-                if (is_central(row)) central_pawn++;
-                if (is_movable(board, {row, col}, is_black)) movable_pawn++;
-            } else if (is_friendly_king(board[row][col], is_black)) {
-                number_of_kings++;
-                if (is_save(col)) save_king++;
-                if (is_defending(row, is_black)) defending_piece++;
-                if (is_central(row)) central_king++;
-                if (is_movable(board, {row, col}, is_black)) movable_king++;
-            } else {
-                number_of_enemy_pieces++;
-            }
-        }
-    }
-    eval = 1 * number_of_pawns +
-           1.9 * number_of_kings +
-           -0.0625 * total_distance_to_promotion +
-           0.3 * save_pawn +
-           0.6 * save_king +
-           0.65 * defending_piece +
-           0.9 * attacking_pawn +
-           0.5 * central_pawn +
-           1 * central_king +
-           0.5 * movable_pawn +
-           1 * movable_king;
-
-    //Instynkt zabójcy
-    if(number_of_enemy_pieces == 0) eval += 1000;
-    if(number_of_enemy_pieces<3) {
-        eval += 2.5 * (3-number_of_enemy_pieces);
-    }
-    return eval;
-}
-
-double Evaluation::evaluate_11(const std::vector<std::vector<int>> &board, bool is_black) {
-    return (evaluate_11params(board, is_black) - evaluate_11params(board, !is_black));
-
-}
 double Evaluation::evaluate_25params(const std::vector<std::vector<int>> &board, bool is_black, const std::vector<double> &parameters) {
     double eval=0;
     //* PARAMETERS *//
@@ -101,6 +39,7 @@ double Evaluation::evaluate_25params(const std::vector<std::vector<int>> &board,
     bool is_dog_pattern = dog_pattern(board, is_black);
     bool is_corner_pawn = pawn_in_corner(board, is_black);
     bool is_corner_king = king_in_corner(board, is_black);
+    eval = evaluate_25_finish(board, is_black);
     for(int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
             if ((row + col) % 2 == 0) continue; // pola niedostępne
@@ -129,7 +68,7 @@ double Evaluation::evaluate_25params(const std::vector<std::vector<int>> &board,
             }
         }
     }
-    eval = number_of_pawns * parameters[0] +
+    eval += number_of_pawns * parameters[0] +
               number_of_kings * parameters[1] +
               total_distance_to_promotion * parameters[2] +
               save_pawn * parameters[3] +
@@ -159,10 +98,43 @@ double Evaluation::evaluate_25params(const std::vector<std::vector<int>> &board,
 }
 
 
+double Evaluation::evaluate_25_finish(const std::vector<std::vector<int>> &board, bool is_black) {
+    int enemy_pieces=0;
+    position enemy_distance={0, 0};
+    int friendly_pieces=0;
+    position friendly_distance={0, 0};
+    for(int i=0; i<8; i++) {
+        for(int j=0; j<8; j++) {
+            if(board[i][j] == 0) continue;
+            if(is_friendly(board[i][j], is_black)) {
+                friendly_pieces += std::abs(board[i][j]);
+                friendly_distance.row += i;
+                friendly_distance.col += j;
+            }
+            else {
+                enemy_pieces += std::abs(board[i][j]);
+                enemy_distance.row += i;
+                enemy_distance.col += j;
+            }
+        }
+    }
+    if(enemy_pieces == 0) return 10000;
+    if((enemy_pieces < 4) and (friendly_pieces>enemy_pieces)) {
+        int row_distance = std::abs(friendly_distance.row - enemy_distance.row);
+        int col_distance = std::abs(friendly_distance.col - enemy_distance.col);
+        int distance = row_distance + col_distance;
+
+        double eval = 20 - distance;
+
+        eval = std::min(std::max(eval, -15.0), 20.0);
+        return eval;
+    }
+    return 0;
+}
+
 double Evaluation::evaluate_25(const std::vector<std::vector<int>> &board, bool is_black,
                                const std::vector<double> &parameters) {
     return (evaluate_25params(board, is_black, parameters) - evaluate_25params(board, !is_black, parameters));
-
 }
 
     bool Evaluation::is_friendly(int piece, bool is_black) {
@@ -181,11 +153,11 @@ double Evaluation::evaluate_25(const std::vector<std::vector<int>> &board, bool 
         return false;
     }
 
+
     int Evaluation::distance_to_promotion(int row, bool is_black) {
         if(is_black) return 7-row;
         return row;
     }
-
 
     bool Evaluation::is_save(int col) {
         if(col == 0 or col == 7) return true;
@@ -353,6 +325,58 @@ bool Evaluation::king_in_corner(const std::vector<std::vector<int>> &board, bool
         if(board[0][7] == -2) return true;
     }
     return false;
+}
+
+int Evaluation::performance(bool is_black, int turns, int result, const std::vector<std::vector<int>> &board) {
+    int perf = 0;
+    int black_count=0;
+    int white_count=0;
+    for(auto &row: board) {
+        for(auto &field: row) {
+            if(field>0) black_count++;
+            if(field<0) white_count++;
+        }
+    }
+    if(result == BLACK_WIN) {
+        if(is_black) {
+            perf = 300;
+            perf-=turns;
+            perf+=black_count*3;
+            perf-=white_count*3;
+        }
+        else {
+            perf = -300;
+            perf+=turns;
+            perf-=black_count*3;
+            perf+=white_count*3;
+        }
+    }
+    else if(result == WHITE_WIN) {
+        if(is_black) {
+            perf = -300;
+            perf+=turns;
+            perf-=black_count*3;
+            perf+=white_count*3;
+        }
+        else {
+            perf = 300;
+            perf-=turns;
+            perf+=black_count*3;
+            perf-=white_count*3;
+        }
+    }
+    else {
+        perf = turns;
+        if(is_black) {
+            perf+=black_count*3;
+            perf-=white_count*3;
+        }
+        else {
+            perf-=black_count*3;
+            perf+=white_count*3;
+        }
+    }
+    return perf;
 }
 
 

@@ -11,7 +11,6 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
-#include "BoardActions.h"
 #include "Bot.h"
 
 enum GameResult {NONE, BLACK_WIN, WHITE_WIN, DRAW};
@@ -29,15 +28,13 @@ class Checkers {
     bool check_win_condition();
 public:
     explicit Checkers(std::vector<std::vector<int>> &board);
-
-    void play();
-    void play_with_bot(bool is_human_black, int depth, int64_t seed);
-    void bot_vs_bot();
+    void resetBoard();
+    void play_with_bot(bool is_human_black, Bot &bot);
+    GameResult bot_vs_bot(Bot &bot_black, Bot &bot_white);
+    bool make_move(const std::string &notation);
+    std::string give_move(Bot &bot, const std::string& notation);
     void train();
-
-    //Getters
-    int getTurn() const;
-
+    void train_2();
 };
 
 #endif //C3_3_CHECKERS_H

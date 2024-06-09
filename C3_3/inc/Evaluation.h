@@ -40,14 +40,21 @@ private:
     static bool pawn_in_corner(const std::vector<std::vector<int>> &board, bool is_black);
     static bool king_in_corner(const std::vector<std::vector<int>> &board, bool is_black);
 
-
-    static double evaluate_11params(const std::vector<std::vector<int>> &board, bool is_black);
+    // Główna funkcja heurystyczna
     static double evaluate_25params(const std::vector<std::vector<int>> &board, bool is_black, const std::vector<double> &parameters);
+
+    //Dodatkowa funkcja heurystyczna gdy gra dobiega końca
+    static double evaluate_25_finish(const std::vector<std::vector<int>> &board, bool is_black);
 public:
+    /** Heurystyki **/
     static double evaluate_random();
     static double evaluate_simple(const std::vector<std::vector<int>> &board, bool is_black);
-    static double evaluate_11(const std::vector<std::vector<int>> &board, bool is_black);
     static double evaluate_25(const std::vector<std::vector<int>> &board, bool is_black, const std::vector<double> &parameters);
+
+
+    /** Trenowanie **/
+    //Funkcja oceniająca jakość heurystyki
+    static int performance(bool is_black, int turns, int result, const std::vector<std::vector<int>> &board);
 };
 
 

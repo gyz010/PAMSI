@@ -7,19 +7,18 @@
 
 #include <vector>
 #include <string>
-#include "Checkers.h"
 #include <random>
 #include <limits>
 #include <chrono>
 #include <thread>
 #include "../inc/Evaluation.h"
 
-enum evaluation {RANDOM, SIMPLE, ELEVEN_PARAMS, TWENTY_FIVE_PARAMS};
+enum evaluation {RANDOM, SIMPLE, TWENTY_FIVE_PARAMS};
 
 class Bot {
 private:
     struct Node {
-        double eval;
+        double eval=0;
         std::string move;
         std::vector<Node> children;
         int turn;
@@ -33,22 +32,39 @@ private:
     evaluation eval_type;
     Node root;
 private:
-    void removeChildren(Node &node);
+    //Funkcja budowania drzewa ruchów
     void fillTree(Node &node, int depth, std::vector<std::vector<int>> &board, int turn);
-    void collapseTree(const std::string &notation);
-    std::string getBestMove();
-    double evaluate(const std::vector<std::vector<int>> &board);
+
+    //Minmax z cięciami alfa-beta
     void minmax(Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> &board);
-    void minmax_25(Node &node, int depth, bool is_max, double alpha, double beta, std::vector<std::vector<int>> &board);
+
+    //Połączenie funkcji fillTree i minmax w celu optymalizacji
+    void fill_tree_with_minmax(Node &node, std::vector<std::vector<int>> &board, int depth, int turn, bool is_max, double alpha, double beta);
+
+    //Usuwanie dzieci nodea
+    void removeChildren(Node &node);
+
+    //Usunięcie całego drzewa, nadanie rootowi ostatni ruch
+    void collapseTree(const std::string &notation);
+
+    //Zwraca najlepszy ruch
+    std::string getBestMove();
 public:
     explicit Bot(bool is_black, int depth, int64_t seed, evaluation eval) : is_black(is_black),
                                                                             depth(depth),
                                                                             gen(std::mt19937_64(seed)),
                                                                             root("", 0),
                                                                             eval_type(eval){};
+
     std::string move(std::vector<std::vector<int>> &board, int turn, const std::string &notation);
+
+    //Ustawienie parametrów dla funkcji heurystycznej
     void setParameters(const std::vector<double> &parameters) { this->parameters = parameters;}
-    void switchSide() { is_black = !is_black;}
+
+    //Zmiana strony (do uczenia parametrów)
+    void switchSide() { is_black = !is_black; }
+    double getEval() const { return root.eval; }
+    void clearRoot() { root.children.clear(); }
 };
 
 #endif //C3_3_BOT_H

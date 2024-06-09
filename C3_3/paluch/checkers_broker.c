@@ -39,7 +39,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define PROGRAM_VERSION 202405120918L
+#define PROGRAM_VERSION 202406071136L
 #define BUFSPACE 1024
 
 //symbole dla graczy
@@ -120,10 +120,10 @@ int fields[10][10] =  { { -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 },
    20 - przegrana przez niewykonanie ruchu w zadanym czasie
    21 - przegrana przez probe ruchu poza kolejnoscia
    22 - przegrana przez zamkniecie polaczenia z brokerem
-   40 - remis - 40 ruchow damkami bez zbicia
+   40 - remis - 20 ruchow damkami bez zbicia
    41 - remis - przekroczony czas gry
 */
-#define DRAW_LIMIT 40
+#define DRAW_LIMIT 20
 struct timeval timeout = { 10, 0 };	/* domyslnie 10 sekund na odpowiedz */
 
 
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 
   strcpy(player_bl, argv[1]);
   strcpy(player_wh, argv[2]);
-  fprintf(stderr, "Player_Bl=\"%s\", player_wh=\"%s\"\n", player_bl, player_wh);
+  fprintf(stderr, "Player_Bl=\"%s\", Player_Wh=\"%s\"\n", player_bl, player_wh);
 
   /* sanity check - sprawdzamy spojnosc inicjalizacji danych */
   for (i=0; i<10; ++i) {
@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
       close(black_serv_sock);
       close(white_serv_sock);
       sprintf(buf, "%d", black_port_num);
-      execl(player_bl,player_bl,"NET","BLACK","8","1291","localhost",buf,NULL);
+      execl(player_bl,player_bl,"NET","BLACK","8","12191","localhost",buf,NULL);
       perror("execl1");
       exit(-1);
     }
@@ -287,8 +287,8 @@ int main(int argc, char *argv[])
       close(black_serv_sock);
       close(white_serv_sock);
       sprintf(buf, "%d", white_port_num);
-      execl(player_bl,player_bl,"NET","WHITE","8","15031","localhost",buf,NULL);
-      perror("execl1");
+      execl(player_wh,player_wh,"NET","WHITE","8","1531","localhost",buf,NULL);
+      perror("execl2");
       exit(-1);
     }
     fprintf(stderr, "Process bialych uruchomiony pid=%d.\n", pid2);
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
   }
   
   fprintf(stderr, "Zaczynamy rozgrywke, pierwszy rusza czarny.\n");
-  show_board_state(board);
+  show_board_state();
   FD_ZERO(&readsocks);
   FD_SET(black_cli_sock, &readsocks);
   FD_SET(white_cli_sock, &readsocks);
@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
 	exit(res);
       }
 
-      /* kazdy ruch zwyklego piona to resetuje licznik ruchow do remisu */
+      /* kazdy ruch zwyklego piona resetuje licznik ruchow do remisu */
       if (IS_MAN(board[ver[move_to]][hor[move_to]]))
 	draw_counter = 0;
     } /* koniec zwyklego ruchu */
@@ -473,7 +473,8 @@ int main(int argc, char *argv[])
       }	/* bicie zakonczone */
 
       /* wykonanie bicia zakonczone - sprawdz czy nie moglo byc kontynuowane */
-      if (1==can_capture(move_to)) { /* jesli sa dalsze bicia to gracz wtopil */
+      if ((1==can_capture(move_to))&&(res!=100)) { /* gracz wtopil jesli sa...*/
+	                                /*dalsze bicia,z wyj.gdy byla promocja*/
 	fprintf(stderr,
 		"Nielegalne bicie gracza %s, mozliwe dalsze bicie, koniec.\n",
 		playername[player]);
