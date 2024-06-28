@@ -37,7 +37,7 @@ size_t StringSearch::rabin_karp(const std::string &main, const std::string &sub)
     size_t sub_size = sub.size();
 
     //Rozmiar alfabetu
-    const int alpha = sizeof(char);
+    const int alpha = 128;
     const int prime = 100000007;
     int64_t sub_hash = string_hash(sub, sub_size, alpha, prime);
     int64_t main_hash = string_hash(main, sub_size, alpha, prime);
@@ -76,7 +76,7 @@ size_t StringSearch::rabin_karp_collision_count(const std::string &main, const s
     size_t sub_size = sub.size();
 
     //Rozmiar alfabetu
-    const int alpha = 256;
+    const int alpha = 128;
     int64_t sub_hash = string_hash(sub, sub_size, alpha, prime);
     int64_t main_hash = string_hash(main, sub_size, alpha, prime);
     // h = (alpha^(sub_size-1)) % prime
@@ -177,8 +177,14 @@ size_t StringSearch::find(const std::string &main, const std::string &sub, Algor
             return kmp(main, sub);
         case BOYER_MOORE:
             return boyer_moore(main, sub);
+        case SUFFIX_ARRAY:
+            SuffixArray suffixArray(main);
+            return suffixArray.find(sub);
+
 
     }
 }
+
+
 
 

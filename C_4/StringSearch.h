@@ -9,12 +9,14 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "SuffixArray.h"
 
 enum Algorithm {
     NAIVE,
     RABIN_KARP,
     KMP,
-    BOYER_MOORE
+    BOYER_MOORE,
+    SUFFIX_ARRAY
 };
 
 class StringSearch {

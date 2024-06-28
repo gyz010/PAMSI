@@ -1,0 +1,24 @@
+Naive:
+Mean: 1483.1 microseconds
+Standard deviation: 69.8151 microseconds
+
+Rabin-Karp:
+Mean: 1030.06 microseconds
+Standard deviation: 16.4457 microseconds
+
+KMP:
+Mean: 1154.1 microseconds
+Standard deviation: 49.4435 microseconds
+
+BM:
+Mean: 648.874 microseconds
+Standard deviation: 197.468 microseconds
+
+SA:
+*Build
+Mean: 146235 microseconds
+Standard deviation: 1678.53 microseconds
+
+*Search
+Mean: 0.2266 microseconds
+Standard deviation: 0.0648352 microseconds

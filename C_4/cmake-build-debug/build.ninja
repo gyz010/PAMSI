@@ -61,14 +61,20 @@ build CMakeFiles/C_4.dir/StringSearch.cpp.o: CXX_COMPILER__C_4_unscanned_Debug /
   OBJECT_DIR = CMakeFiles/C_4.dir
   OBJECT_FILE_DIR = CMakeFiles/C_4.dir
 
-build CMakeFiles/C_4.dir/Trie.cpp.o: CXX_COMPILER__C_4_unscanned_Debug /home/gyz/Desktop/PAMSI/C_4/Trie.cpp || cmake_object_order_depends_target_C_4
-  DEP_FILE = CMakeFiles/C_4.dir/Trie.cpp.o.d
+build CMakeFiles/C_4.dir/Initialization.cpp.o: CXX_COMPILER__C_4_unscanned_Debug /home/gyz/Desktop/PAMSI/C_4/Initialization.cpp || cmake_object_order_depends_target_C_4
+  DEP_FILE = CMakeFiles/C_4.dir/Initialization.cpp.o.d
   FLAGS = -g -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/C_4.dir
   OBJECT_FILE_DIR = CMakeFiles/C_4.dir
 
-build CMakeFiles/C_4.dir/Initialization.cpp.o: CXX_COMPILER__C_4_unscanned_Debug /home/gyz/Desktop/PAMSI/C_4/Initialization.cpp || cmake_object_order_depends_target_C_4
-  DEP_FILE = CMakeFiles/C_4.dir/Initialization.cpp.o.d
+build CMakeFiles/C_4.dir/SuffixArray.cpp.o: CXX_COMPILER__C_4_unscanned_Debug /home/gyz/Desktop/PAMSI/C_4/SuffixArray.cpp || cmake_object_order_depends_target_C_4
+  DEP_FILE = CMakeFiles/C_4.dir/SuffixArray.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/C_4.dir
+  OBJECT_FILE_DIR = CMakeFiles/C_4.dir
+
+build CMakeFiles/C_4.dir/Tests.cpp.o: CXX_COMPILER__C_4_unscanned_Debug /home/gyz/Desktop/PAMSI/C_4/Tests.cpp || cmake_object_order_depends_target_C_4
+  DEP_FILE = CMakeFiles/C_4.dir/Tests.cpp.o.d
   FLAGS = -g -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/C_4.dir
   OBJECT_FILE_DIR = CMakeFiles/C_4.dir
@@ -81,7 +87,7 @@ build CMakeFiles/C_4.dir/Initialization.cpp.o: CXX_COMPILER__C_4_unscanned_Debug
 #############################################
 # Link the executable C_4
 
-build C_4: CXX_EXECUTABLE_LINKER__C_4_Debug CMakeFiles/C_4.dir/main.cpp.o CMakeFiles/C_4.dir/StringSearch.cpp.o CMakeFiles/C_4.dir/Trie.cpp.o CMakeFiles/C_4.dir/Initialization.cpp.o
+build C_4: CXX_EXECUTABLE_LINKER__C_4_Debug CMakeFiles/C_4.dir/main.cpp.o CMakeFiles/C_4.dir/StringSearch.cpp.o CMakeFiles/C_4.dir/Initialization.cpp.o CMakeFiles/C_4.dir/SuffixArray.cpp.o CMakeFiles/C_4.dir/Tests.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/C_4.dir
   POST_BUILD = :

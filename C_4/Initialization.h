@@ -15,6 +15,7 @@ struct Args {
     Algorithm algorithm;
     bool case_sensitivity;
     bool ignore_whitespace;
+    std::string test;
     Args() {
         algorithm = NAIVE;
         case_sensitivity = false;
@@ -25,12 +26,14 @@ struct Args {
 
 class Initialization {
 private:
-
+    static Algorithm choose_algorithm(const std::string &s);
+    static Args args;
 public:
-    static Args handle_args(int argc, char **argv);
+    static void handle_args(int argc, char **argv);
     static std::string read_to_main_string(const std::string &main_string_file);
-    static void remove_whitespace(std::string &main, std::string &sub);
-    static void to_lower(std::string &main, std::string &sub);
+    static void remove_whitespace(std::string &str);
+    static void to_lower(std::string &str);
+    static Args& get_args(){return args;};
 };
 
 
